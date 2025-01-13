@@ -1,7 +1,11 @@
 {
-  "name": "automail-campain",
+  "name": "automail-campaign-manager",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "author": "Puneet Bhardwaj",
+  "description": "An Campaign manager tool for automating email campaigns powered by ai writer",
+  "github": "https://github.com/BeyonderSS/automail-campaign-manager",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
