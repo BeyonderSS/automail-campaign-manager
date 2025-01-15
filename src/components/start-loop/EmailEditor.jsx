@@ -96,7 +96,6 @@ export function EmailEditor({ onSave, fields }) {
       setEmailPurpose("");
     }
   };
-
   const generateAIContent = async () => {
     if (!emailPurpose) return;
   
@@ -108,26 +107,34 @@ export function EmailEditor({ onSave, fields }) {
     const signal = abortControllerRef.current.signal;
   
     try {
-      const response = await streamAIEmailTemplate(emailPurpose);
+      const response = await streamAIEmailTemplate(emailPurpose, fields); // Pass dynamic fields
       const reader = response.getReader();
-      let fullContent = "";
-      let isSubjectSet = false;
+      let textBuffer = ""; // Buffer to accumulate partial JSON data
   
       while (true) {
         const { done, value } = await reader.read();
         if (done || signal.aborted) break;
   
         const chunk = new TextDecoder().decode(value);
-        fullContent += chunk;
-        const lines = fullContent.split("\n");
+        textBuffer += chunk; // Accumulate chunks
   
-        if (!isSubjectSet && lines[0].startsWith("Subject:")) {
-          setSubject(lines[0].replace("Subject:", "").trim());
-          isSubjectSet = true;
+        // Attempt to parse JSON when we have complete data
+        try {
+          const emailData = JSON.parse(textBuffer);
+          
+          if (emailData.subject) {
+            setSubject(emailData.subject); // Set the subject
+          }
+  
+          if (emailData.body) {
+            const htmlContent = marked(emailData.body); // Convert Markdown to HTML
+            editor.commands.setContent(htmlContent); // Set the body content
+          }
+  
+          textBuffer = ""; // Clear the buffer after successful parsing
+        } catch (err) {
+          // JSON is incomplete; keep accumulating chunks
         }
-  
-        const htmlContent = marked(fullContent);
-        editor.commands.setContent(htmlContent);
       }
     } catch (error) {
       console.error("Error generating AI content:", error);
@@ -135,7 +142,8 @@ export function EmailEditor({ onSave, fields }) {
       setIsGenerating(false);
     }
   };
-
+  
+  
   const cancelGeneration = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();

@@ -2,8 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { populateEmailTemplate } from '@/utils/emailTemplate'
-import { Badge } from './ui/badge'
+import { Badge } from '../ui/badge'
 
 export function EmailPreview({
   emailTemplate,
@@ -12,8 +11,8 @@ export function EmailPreview({
   currentIndex,
   onNavigate,
 }) {
-  const populatedSubject = populateEmailTemplate(emailTemplate.subject, previewData)
-  const populatedBody = populateEmailTemplate(emailTemplate.body, previewData)
+  const populatedSubject = emailTemplate.subject
+  const populatedBody = emailTemplate.body
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -65,4 +64,3 @@ export function EmailPreview({
     </Card>
   )
 }
-

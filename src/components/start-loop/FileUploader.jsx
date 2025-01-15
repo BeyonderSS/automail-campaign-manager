@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Loader2, Upload, File, X } from 'lucide-react'
-import { parseFile } from '../utils/fileUtils.js'
+import { parseFile } from '../../utils/fileUtils.js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 
@@ -28,7 +28,18 @@ export function FileUploader({ onUpload }) {
         })
         setFileData(data)
         setFields(extractedFields)
-        onUpload(data, extractedFields)
+
+        // Assuming email field exists in the data (you might need to adjust this based on your file's structure)
+        const emailField = extractedFields.find((field) => field.toLowerCase().includes('email'))
+        if (emailField) {
+          // Extract emails from the data
+          const emails = data.map((row) => row[emailField])
+          onUpload(data, extractedFields, emails)
+        } else {
+          // Handle case where no email field is found
+          console.error('No email field found in the uploaded file.')
+          onUpload(data, extractedFields, [])
+        }
       } catch (error) {
         console.error('Error parsing file:', error)
       } finally {
@@ -36,6 +47,7 @@ export function FileUploader({ onUpload }) {
       }
     }
   }, [onUpload])
+
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

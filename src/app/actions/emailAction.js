@@ -23,13 +23,14 @@ export async function checkQueueStatus(queueId) {
   }
 }
 
-export async function streamAIEmailTemplate(purpose) {
-  const stream = generateEmailContent(purpose); // Assuming this generates strings
+export async function streamAIEmailTemplate(purpose, dynamicFields) {
+  const stream = generateEmailContent(purpose, dynamicFields); // Pass dynamic fields to AI content generator
   return new ReadableStream({
     async start(controller) {
       try {
+        // Fetch the email content in chunks
         for await (const chunk of stream) {
-          const encodedChunk = new TextEncoder().encode(chunk); // Convert string to Uint8Array
+          const encodedChunk = new TextEncoder().encode(JSON.stringify(chunk)); // Convert chunk to string (object with subject and body)
           controller.enqueue(encodedChunk);
         }
         controller.close();

@@ -1,7 +1,7 @@
 import { CheckIcon } from 'lucide-react'
 
 export function ProgressBar({ currentStep, totalSteps }) {
-  const steps = ['Upload File', 'Create Template', 'Preview & Send']
+  const steps = ['Enter Details', 'Upload File & Select Template', 'Preview & Trigger Loop']
 
   return (
     <div className="flex items-center space-x-4">
