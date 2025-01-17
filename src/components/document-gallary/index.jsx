@@ -4,40 +4,78 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileTextIcon, UploadCloud } from "lucide-react";
+import { FileTextIcon, UploadCloud, MoreVertical } from "lucide-react";
 import { ReusableAlert } from "../ui/ReusableAlert";
 import { useAuth } from "@clerk/nextjs";
 import { createDocument, deleteDocument } from "@/app/actions/DocumentActions";
 import { UploadDropzone } from "@/utils/uploadthing";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu";
 
 // Component for rendering document card
-const DocumentCard = ({ doc, selectedDocument, setSelectedDocument, handleDelete }) => (
-  <Card
-    key={doc._id}
-    className={`cursor-pointer transition-all hover:shadow-md ${
-      selectedDocument?._id === doc._id ? "ring-2 ring-primary" : ""
-    }`}
-    onClick={() => setSelectedDocument(doc)}
-  >
-    <CardContent className="flex flex-col items-center p-4">
-      <FileTextIcon className="h-12 w-12 text-blue-500" />
-      <p className="mt-2 w-full truncate text-center text-sm">{doc.title}</p>
-      <ReusableAlert
-        triggerText="Delete Document"
-        triggerProps={{
-          className: "mt-2",
-          variant: "destructive",
+const DocumentCard = ({
+  doc,
+  selectedDocument,
+  setSelectedDocument,
+  handleDelete,
+}) => (
+  <ContextMenu>
+    <ContextMenuTrigger>
+      <Card
+        key={doc._id}
+        className={`cursor-pointer transition-all hover:shadow-md ${
+          selectedDocument?._id === doc._id ? "ring-2 ring-primary" : ""
+        }`}
+        onClick={() => setSelectedDocument(doc)}
+      >
+        <CardContent className="flex flex-col items-center p-4">
+          <FileTextIcon className="h-12 w-12 text-blue-500" />
+          <p className="mt-2 w-full truncate text-center text-sm">
+            {doc.title}
+          </p>
+        </CardContent>
+      </Card>
+    </ContextMenuTrigger>
+    <ContextMenuContent>
+      <ContextMenuItem
+        onClick={() => window.open(doc.url, "_blank")}
+        className="cursor-pointer"
+      >
+        Download
+      </ContextMenuItem>
+      <ContextMenuSeparator />
+      <ContextMenuItem
+        onClick={() => {
+          const triggerAlert = document.getElementById(
+            `delete-alert-${doc._id}`,
+          );
+          triggerAlert?.click();
         }}
-        dialogTitle="Confirm Document Deletion"
-        dialogDescription={`Are you sure you want to delete "${doc.title}"? This action cannot be undone.`}
-        cancelText="Cancel"
-        actionText="Delete"
-        onAction={() => {
-          handleDelete(doc._id);
-        }}
-      />
-    </CardContent>
-  </Card>
+        className="cursor-pointer text-red-500"
+      >
+        Delete
+      </ContextMenuItem>
+    </ContextMenuContent>
+    <ReusableAlert
+      triggerText="Delete Document"
+      triggerProps={{
+        id: `delete-alert-${doc._id}`,
+        className: "hidden",
+      }}
+      dialogTitle="Confirm Document Deletion"
+      dialogDescription={`Are you sure you want to delete \"${doc.title}\"? This action cannot be undone.`}
+      cancelText="Cancel"
+      actionText="Delete"
+      onAction={() => {
+        handleDelete(doc._id);
+      }}
+    />
+  </ContextMenu>
 );
 
 // Component for handling document upload
@@ -73,7 +111,7 @@ const DocumentPreview = ({ selectedDocument }) => (
     {selectedDocument ? (
       <iframe
         src={`https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(
-          selectedDocument.url
+          selectedDocument.url,
         )}`}
         className="h-full w-full border-0"
         title={`Preview of ${selectedDocument.title}`}
