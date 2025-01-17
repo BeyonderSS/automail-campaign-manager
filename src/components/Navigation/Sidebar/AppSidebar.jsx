@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, PiIcon } from "lucide-react";
+import { BookCheck, Calendar ,Home, Inbox } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +14,6 @@ import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import UserContextMenu from "./UserContextMenu";
 import UserProfileButton from "./UserProfileButton";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import SidebarItemSkeleton from "./SidebarItemSkeleton";
 import Logo from "@/app/logo";
 
@@ -34,6 +33,10 @@ const menuItems = [
     url: "/dashboard/your-loops",
     icon: Calendar,
   },
+  {title:"Your Documents",
+    url:"/dashboard/document-gallary",
+    icon:BookCheck
+  }
 ];
 
 // Sidebar Header Component

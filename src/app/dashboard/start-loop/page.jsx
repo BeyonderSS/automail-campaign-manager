@@ -1,7 +1,9 @@
 import StartLoop from '@/components/start-loop'
 import React from 'react'
 
-function Home() {
+async function Home({searchParams}) {
+  const search = await searchParams
+  console.log(search)
   return (
     <StartLoop />
   )
