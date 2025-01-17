@@ -8,7 +8,7 @@ import { EmailEditor } from "./EmailEditor";
 import { createEmailQueueForLoop } from "@/app/actions/Loops";
 import { EmailPreview } from "./EmailPreview";
 
-export default function StartLoop() {
+export default function StartLoop({documentGallaryData}) {
   const [step, setStep] = useState(1);
   const [isCsvUploaded, setIsCsvUploaded] = useState(false);
   const [emailTemplate, setEmailTemplate] = useState(null);
@@ -81,6 +81,7 @@ export default function StartLoop() {
         ...item,
         subject: populateDynamicFields(template.subject, item.dynamicFields),
         body: populateDynamicFields(template.body, item.dynamicFields),
+        documentGallary:template.attachments._id
       }));
 
       setEmailQueueData(updatedQueueData);
@@ -142,6 +143,7 @@ export default function StartLoop() {
                   : []
               }
               onSave={handleEmailTemplateSave}
+              documentGallaryData={documentGallaryData}
             />
           ))}
         {step === 3 && (

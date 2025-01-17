@@ -22,7 +22,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { marked } from "marked";
 import { streamAIEmailTemplate } from "@/app/actions/emailAction";
-import { Loader2, Bold, Italic, UnderlineIcon, List, ListOrdered, LinkIcon, Paperclip } from 'lucide-react';
+import {
+  Loader2,
+  Bold,
+  Italic,
+  UnderlineIcon,
+  List,
+  ListOrdered,
+  LinkIcon,
+  Paperclip,
+} from "lucide-react";
 
 const emailTemplates = [
   {
@@ -47,7 +56,7 @@ const emailTemplates = [
   },
 ];
 
-export function EmailEditor({ onSave, fields }) {
+export function EmailEditor({ onSave, fields, documentGallaryData }) {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [subject, setSubject] = useState("");
   const [attachments, setAttachments] = useState([]);
@@ -86,51 +95,41 @@ export function EmailEditor({ onSave, fields }) {
     }
   };
 
-  const handleAttachmentChange = (e) => {
-    setAttachments([...e.target.files]);
-  };
-
-  const handleAIToggle = (checked) => {
-    setUseAI(checked);
-    if (!checked) {
-      setEmailPurpose("");
-    }
-  };
   const generateAIContent = async () => {
     if (!emailPurpose) return;
-  
+
     setIsGenerating(true);
     editor.commands.setContent("");
     setSubject("");
-  
+
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
-  
+
     try {
       const response = await streamAIEmailTemplate(emailPurpose, fields); // Pass dynamic fields
       const reader = response.getReader();
       let textBuffer = ""; // Buffer to accumulate partial JSON data
-  
+
       while (true) {
         const { done, value } = await reader.read();
         if (done || signal.aborted) break;
-  
+
         const chunk = new TextDecoder().decode(value);
         textBuffer += chunk; // Accumulate chunks
-  
+
         // Attempt to parse JSON when we have complete data
         try {
           const emailData = JSON.parse(textBuffer);
-          
+
           if (emailData.subject) {
             setSubject(emailData.subject); // Set the subject
           }
-  
+
           if (emailData.body) {
             const htmlContent = marked(emailData.body); // Convert Markdown to HTML
             editor.commands.setContent(htmlContent); // Set the body content
           }
-  
+
           textBuffer = ""; // Clear the buffer after successful parsing
         } catch (err) {
           // JSON is incomplete; keep accumulating chunks
@@ -142,8 +141,7 @@ export function EmailEditor({ onSave, fields }) {
       setIsGenerating(false);
     }
   };
-  
-  
+
   const cancelGeneration = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -160,9 +158,9 @@ export function EmailEditor({ onSave, fields }) {
   }, []);
 
   return (
-    <Card className="w-full max-w-4xl mx-auto  dark:bg-gray">
-      <CardContent className="p-6 space-y-6">
-        <h2 className="text-2xl font-semibold text-center mb-6 dark:text-purple text-purple-dark">
+    <Card className="mx-auto w-full max-w-4xl dark:bg-gray">
+      <CardContent className="space-y-6 p-6">
+        <h2 className="mb-6 text-center text-2xl font-semibold text-purple-dark dark:text-purple">
           Create Email Template
         </h2>
 
@@ -204,7 +202,11 @@ export function EmailEditor({ onSave, fields }) {
                   Cancel Generation
                 </Button>
               ) : (
-                <Button onClick={generateAIContent} disabled={!emailPurpose} className="w-full">
+                <Button
+                  onClick={generateAIContent}
+                  disabled={!emailPurpose}
+                  className="w-full"
+                >
                   Generate AI Content
                 </Button>
               )}
@@ -219,16 +221,16 @@ export function EmailEditor({ onSave, fields }) {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Enter email subject"
-            className=" dark:bg-gray-light"
+            className="dark:bg-gray-light"
           />
         </div>
 
         <div className="space-y-2">
           <Label>Email Body</Label>
-          <div className="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
-            <div className="flex items-center gap-2 bg-gray-200 dark:bg-gray-light p-2 border-b border-gray-300 dark:border-gray-600">
+          <div className="overflow-hidden rounded-md border border-gray-300 dark:border-gray-600">
+            <div className="flex items-center gap-2 border-b border-gray-300 bg-gray-200 p-2 dark:border-gray-600 dark:bg-gray-light">
               <Button
-              className=""
+                className=""
                 onClick={() => editor?.chain().focus().toggleBold().run()}
                 variant={editor?.isActive("bold") ? "secondary" : "ghost"}
                 size="sm"
@@ -257,8 +259,12 @@ export function EmailEditor({ onSave, fields }) {
                 <List className="h-4 w-4" />
               </Button>
               <Button
-                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                variant={editor?.isActive("orderedList") ? "secondary" : "ghost"}
+                onClick={() =>
+                  editor?.chain().focus().toggleOrderedList().run()
+                }
+                variant={
+                  editor?.isActive("orderedList") ? "secondary" : "ghost"
+                }
                 size="sm"
               >
                 <ListOrdered className="h-4 w-4" />
@@ -276,7 +282,10 @@ export function EmailEditor({ onSave, fields }) {
                 <LinkIcon className="h-4 w-4" />
               </Button>
             </div>
-            <EditorContent editor={editor} className="p-4 min-h-[200px] bg-white dark:bg-gray-lighter " />
+            <EditorContent
+              editor={editor}
+              className="min-h-[200px] bg-white p-4 dark:bg-gray-lighter"
+            />
           </div>
         </div>
 
@@ -285,13 +294,24 @@ export function EmailEditor({ onSave, fields }) {
             <Paperclip className="h-4 w-4" />
             <span>Mail Attachments</span>
           </Label>
-          <Input
-            id="attachments"
-            type="file"
-            onChange={handleAttachmentChange}
-            multiple
-            className="bg-gray-200 dark:bg-gray-light"
-          />
+          {documentGallaryData.length > 0 ? (
+            <Select onValueChange={(value) => setAttachments(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Document for attachment" />
+              </SelectTrigger>
+              <SelectContent>
+                {documentGallaryData.map((document) => (
+                  <SelectItem key={document._id} value={document}>
+                    {document.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Link href="dashboard/document-gallary">
+              Upload Your Documents
+            </Link>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -303,7 +323,7 @@ export function EmailEditor({ onSave, fields }) {
                 variant="outline"
                 size="sm"
                 onClick={() => insertDynamicField(field)}
-                className="bg-purple/10 hover:bg-purple/20 "
+                className="bg-purple/10 hover:bg-purple/20"
               >
                 {`${field}`}
               </Button>
@@ -315,7 +335,7 @@ export function EmailEditor({ onSave, fields }) {
           onClick={() =>
             onSave({ subject, body: editor?.getHTML(), attachments })
           }
-          className="w-full bg-purple hover:bg-purple-dark text-white"
+          className="w-full bg-purple text-white hover:bg-purple-dark"
         >
           Continue to Preview
         </Button>
@@ -323,4 +343,3 @@ export function EmailEditor({ onSave, fields }) {
     </Card>
   );
 }
-
