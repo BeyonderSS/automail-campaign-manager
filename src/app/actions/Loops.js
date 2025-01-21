@@ -1,6 +1,7 @@
 "use server";
 
 import dbConnect from "@/lib/dbConnect";
+import DocumentGallery from "@/models/DocumentGallery";
 import EmailQueue from "@/models/EmailQueue";
 import Loop from '@/models/Loop';
 import User from '@/models/User';
