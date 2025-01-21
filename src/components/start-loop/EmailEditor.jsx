@@ -31,6 +31,7 @@ import {
   ListOrdered,
   LinkIcon,
   Paperclip,
+  Lock,
 } from "lucide-react";
 
 const emailTemplates = [
@@ -56,7 +57,12 @@ const emailTemplates = [
   },
 ];
 
-export function EmailEditor({ onSave, fields, documentGallaryData }) {
+export function EmailEditor({
+  onSave,
+  fields,
+  documentGallaryData,
+  isAiEnabled,
+}) {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [subject, setSubject] = useState("");
   const [attachments, setAttachments] = useState([]);
@@ -167,7 +173,19 @@ export function EmailEditor({ onSave, fields, documentGallaryData }) {
         <Tabs defaultValue="manual" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">Manual</TabsTrigger>
-            <TabsTrigger value="ai">AI Assistant</TabsTrigger>
+            <TabsTrigger disabled={!isAiEnabled} value="ai">
+              {isAiEnabled ? (
+                "AI Assistant"
+              ) : (
+                <>
+                  <Lock className="mx-2 h-4" /> AI Assistant{" "}
+                  <span className="sr-only">
+                    Go to manage credentials and add Hugging Face token to
+                    enable this feature.
+                  </span>
+                </>
+              )}
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="manual">
             <div className="space-y-4">
@@ -308,9 +326,7 @@ export function EmailEditor({ onSave, fields, documentGallaryData }) {
               </SelectContent>
             </Select>
           ) : (
-            <Link href="dashboard/document-gallary">
-              Upload Your Documents
-            </Link>
+            <Link href="dashboard/document-gallary">Upload Your Documents</Link>
           )}
         </div>
 

@@ -1,8 +1,13 @@
+import { getUserMetadata } from "@/app/actions/CredentialActions";
 import { HfInference } from "@huggingface/inference";
+import { auth } from "@clerk/nextjs/server";
 
-const client = new HfInference(process.env.HFS_TOKEN);
 export async function* generateEmailContent(purpose, dynamicFields) {
   // Construct the prompt with dynamic fields
+  const { userId } = await auth();
+
+  const tokenData = await getUserMetadata(userId)
+  const client = new HfInference(tokenData.data.huggingfaceToken);
   const dynamicFieldPlaceholders = dynamicFields.map(field => `{{${field}}}`).join(", ");
   const prompt = `Generate a professional email for the following purpose: ${purpose}. 
   The email should include the following dynamic fields: ${dynamicFieldPlaceholders}.

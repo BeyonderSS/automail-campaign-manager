@@ -9,7 +9,7 @@ import { createEmailQueueForLoop } from "@/app/actions/Loops";
 import { EmailPreview } from "./EmailPreview";
 import { ProcessLoopButton } from "../manage-loops/ProcessLoopButton";
 
-export default function StartLoop({ documentGallaryData }) {
+export default function StartLoop({ documentGallaryData ,isAiEnabled}) {
   const [step, setStep] = useState(1);
   const [isCsvUploaded, setIsCsvUploaded] = useState(false);
   const [emailTemplate, setEmailTemplate] = useState(null);
@@ -141,6 +141,7 @@ export default function StartLoop({ documentGallaryData }) {
             <FileUploader onUpload={handleFileUpload} />
           ) : (
             <EmailEditor
+            isAiEnabled={isAiEnabled}
               fields={
                 emailQueueData.length > 0
                   ? Object.keys(emailQueueData[0].dynamicFields)
