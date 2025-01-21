@@ -11,7 +11,6 @@ async function page() {
   const tokenData = await getUserMetadata(userId);
   const isPageLocked = tokenData.data.uploadThingToken ? false : true;
   const documentsData = await getDocumentsByUser(userId);
-  console.log(documentsData?.data);
 
   // If the page is locked, show a message or redirect
   if (isPageLocked) {

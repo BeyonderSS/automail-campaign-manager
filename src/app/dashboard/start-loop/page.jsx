@@ -12,11 +12,12 @@ async function Home({ searchParams }) {
   const tokenData = await getUserMetadata(userId);
 
   const isAiEnabled = tokenData.data.huggingfaceToken ? true : false;
-  
-  console.log(isAiEnabled,tokenData.data.huggingfaceToken)
+
+  console.log(isAiEnabled, tokenData.data.huggingfaceToken);
   const documentsData = await getDocumentsByUser(userId);
   return (
     <StartLoop
+      searchParams={search}
       documentGallaryData={documentsData?.data}
       isAiEnabled={isAiEnabled}
     />

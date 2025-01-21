@@ -9,11 +9,18 @@ import { createEmailQueueForLoop } from "@/app/actions/Loops";
 import { EmailPreview } from "./EmailPreview";
 import { ProcessLoopButton } from "../manage-loops/ProcessLoopButton";
 
-export default function StartLoop({ documentGallaryData ,isAiEnabled}) {
-  const [step, setStep] = useState(1);
+export default function StartLoop({
+  documentGallaryData,
+  isAiEnabled,
+  searchParams,
+}) {
+  console.log(searchParams);
+  const [step, setStep] = useState(searchParams.loopId ? 2 : 1);
+  const [loopData, setLoopData] = useState({
+    _id: searchParams ? searchParams.loopId : null,
+  });
   const [isCsvUploaded, setIsCsvUploaded] = useState(false);
   const [emailTemplate, setEmailTemplate] = useState(null);
-  const [loopData, setLoopData] = useState(null);
   const [emailQueueData, setEmailQueueData] = useState([
     {
       email: "",
@@ -24,7 +31,6 @@ export default function StartLoop({ documentGallaryData ,isAiEnabled}) {
     },
   ]);
   const [error, setError] = useState(null); // State for error tracking
-  const [currentIndex, setCurrentIndex] = useState(0); // Index for preview navigation
 
   const handleLoopDetailsSuccess = (data) => {
     setLoopData(data);
@@ -90,12 +96,12 @@ export default function StartLoop({ documentGallaryData ,isAiEnabled}) {
       // Optionally save to the backend
       const response = await createEmailQueueForLoop(
         loopData._id,
-        updatedQueueData
+        updatedQueueData,
       );
 
       if (!response.success) {
         throw new Error(
-          response.error || "An error occurred while creating email queues."
+          response.error || "An error occurred while creating email queues.",
         );
       }
 
@@ -106,12 +112,10 @@ export default function StartLoop({ documentGallaryData ,isAiEnabled}) {
       // Set error message in state
       setError(
         error.message ||
-          "An unexpected error occurred while processing the email template."
+          "An unexpected error occurred while processing the email template.",
       );
     }
   };
-
-  
 
   // Display error if it exists
   const renderError = () => {
@@ -122,10 +126,6 @@ export default function StartLoop({ documentGallaryData ,isAiEnabled}) {
         </div>
       );
     }
-  };
-
-  const handleNavigatePreview = (index) => {
-    setCurrentIndex(index);
   };
 
   return (
@@ -141,7 +141,7 @@ export default function StartLoop({ documentGallaryData ,isAiEnabled}) {
             <FileUploader onUpload={handleFileUpload} />
           ) : (
             <EmailEditor
-            isAiEnabled={isAiEnabled}
+              isAiEnabled={isAiEnabled}
               fields={
                 emailQueueData.length > 0
                   ? Object.keys(emailQueueData[0].dynamicFields)
@@ -152,16 +152,15 @@ export default function StartLoop({ documentGallaryData ,isAiEnabled}) {
             />
           ))}
         {step === 3 && (
-          <>
+          <div className="w-full">
             <EmailPreview
-              emailTemplate={emailQueueData[currentIndex]}
-              previewData={emailQueueData[currentIndex].dynamicFields}
+              emailTemplate={emailQueueData}
               totalRecords={emailQueueData.length}
-              currentIndex={currentIndex}
-              onNavigate={handleNavigatePreview}
             />
-            <ProcessLoopButton loopId={loopData._id}/>
-          </>
+            <div className="m-4 flex items-center justify-center">
+              <ProcessLoopButton loopId={loopData._id} />
+            </div>
+          </div>
         )}
       </div>
       {renderError()} {/* Render the error message */}

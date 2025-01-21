@@ -11,7 +11,7 @@ export async function initializeLoop(userId, title, description) {
     await dbConnect();
 
     // Check if the user exists
-    const user = await User.findOne({"clerkUserId":userId});
+    const user = await User.findOne({ "clerkUserId": userId });
     if (!user) {
       return { success: false, error: "User not found" };
     }
@@ -20,8 +20,8 @@ export async function initializeLoop(userId, title, description) {
     const newLoop = new Loop({
       title,
       description,
-      userId:user._id,
-      status: 'pending', // Default status
+      userId: user._id,
+      status: 'incomplete', // Default status
       emails: [], // Start with an empty email queue
       sentEmails: 0,
       failedEmails: 0,
@@ -55,107 +55,136 @@ export async function initializeLoop(userId, title, description) {
 //     },
 //   ];
 export async function createEmailQueueForLoop(loopId, emailQueueData) {
-    try {
-      await dbConnect();
+  try {
+    await dbConnect();
 
-      // Find the loop by ID
-      const loop = await Loop.findById(loopId);
-      if (!loop) {
-        return { success: false, error: "Loop not found" };
-      }
-      // Create email queue documents for each email in the provided data
-      const emailQueues = await EmailQueue.insertMany(
-        emailQueueData.map((emailData) => ({
-          email: emailData.email,
-          dynamicFields: emailData.dynamicFields,
-          subject: emailData.subject,
-          body: emailData.body,
-          documentGallary: emailData.documentGallary,
-        }))
-      );
-  
-      // Add created email queue references to the loop
-      loop.emails.push(...emailQueues.map((email) => email._id));
-      loop.totalEmails = emailQueues.length; // Update totalEmails count
-      await loop.save();
-  
-      return {
-        success: true,
-        data: JSON.parse(JSON.stringify(emailQueues)),
-        message: "Email queues created and loop updated successfully.",
-      };
-    } catch (error) {
-      console.error("Error creating email queue for loop:", error);
-      return { success: false, error: error.message };
+    // Find the loop by ID
+    const loop = await Loop.findById(loopId);
+    if (!loop) {
+      return { success: false, error: "Loop not found" };
     }
-  }
+    // Create email queue documents for each email in the provided data
+    const emailQueues = await EmailQueue.insertMany(
+      emailQueueData.map((emailData) => ({
+        email: emailData.email,
+        dynamicFields: emailData.dynamicFields,
+        subject: emailData.subject,
+        body: emailData.body,
+        documentGallary: emailData.documentGallary,
+      }))
+    );
 
-  export async function getAllLoopsByUserId(userId) {
-    try {
-      await dbConnect();
-  
-      // Find the user by their Clerk User ID
-      const user = await User.findOne({ "clerkUserId": userId });
-      if (!user) {
-        return { success: false, error: "User not found" };
-      }
-  
-      // Find all loops associated with the user
-      const loops = await Loop.find({ userId: user._id });
-  
-      if (loops.length === 0) {
-        return { success: true, data: [], message: "No loops found for the user." };
-      }
-  
-      return { success: true, data: JSON.parse(JSON.stringify(loops)), message: "Loops retrieved successfully." };
-    } catch (error) {
-      console.error("Error retrieving loops:", error);
-      return { success: false, error: error.message };
-    }
+    // Add created email queue references to the loop
+    loop.emails.push(...emailQueues.map((email) => email._id));
+    loop.totalEmails = emailQueues.length; // Update totalEmails count
+    loop.status = 'pending'; // Update loop status to 'pending'
+    await loop.save();
+
+    return {
+      success: true,
+      data: JSON.parse(JSON.stringify(emailQueues)),
+      message: "Email queues created and loop updated successfully.",
+    };
+  } catch (error) {
+    console.error("Error creating email queue for loop:", error);
+    return { success: false, error: error.message };
   }
-  
-  export async function triggerLoop(loopId) {
-    try {
-      const response = await fetch(`${process.env.TRIGGER_URI}/api/loops/process-loop/${loopId}`, {
-        method: "POST",
-      });
-  
-      if (!response.ok) {
-        // If response is not OK, get the error details
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to process loop');
-      }
-  
-      const responseData = await response.json();
-      revalidatePath('/dashboard/your-loops/[slug]', 'page')
-      revalidatePath('/dashboard/your-loops', 'page')
-      return { success: true, message: responseData.message };
-    } catch (error) {
-      // Handle network errors or unexpected issues
-      return { success: false, error: error.message || "An unexpected error occurred." };
+}
+
+export async function getAllLoopsByUserId(userId) {
+  try {
+    await dbConnect();
+
+    // Find the user by their Clerk User ID
+    const user = await User.findOne({ "clerkUserId": userId });
+    if (!user) {
+      return { success: false, error: "User not found" };
     }
-  }
-  export async function getLoopById(userId, loopId) {
-    try {
-      await dbConnect();
-  
-      // Find the user by their Clerk User ID
-      const user = await User.findOne({ "clerkUserId": userId });
-      if (!user) {
-        return { success: false, error: "User not found" };
-      }
-  
-      // Find the loop by ID and associated with the user
-      const loop = await Loop.findOne({ _id: loopId, userId: user._id });
-      
-      if (!loop) {
-        return { success: false, error: "Loop not found" };
-      }
-  
-      return { success: true, data: JSON.parse(JSON.stringify(loop)), message: "Loop retrieved successfully." };
-    } catch (error) {
-      console.error("Error retrieving loop:", error);
-      return { success: false, error: error.message };
+
+    // Find all loops associated with the user
+    const loops = await Loop.find({ userId: user._id });
+
+    if (loops.length === 0) {
+      return { success: true, data: [], message: "No loops found for the user." };
     }
+
+    return { success: true, data: JSON.parse(JSON.stringify(loops)), message: "Loops retrieved successfully." };
+  } catch (error) {
+    console.error("Error retrieving loops:", error);
+    return { success: false, error: error.message };
   }
-  
+}
+
+export async function triggerLoop(loopId) {
+  try {
+    const response = await fetch(`${process.env.TRIGGER_URI}/api/loops/process-loop/${loopId}`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      // If response is not OK, get the error details
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to process loop');
+    }
+
+    const responseData = await response.json();
+    revalidatePath('/dashboard/your-loops/[slug]', 'page')
+    revalidatePath('/dashboard/your-loops', 'page')
+    return { success: true, message: responseData.message };
+  } catch (error) {
+    // Handle network errors or unexpected issues
+    return { success: false, error: error.message || "An unexpected error occurred." };
+  }
+}
+export async function getLoopById(userId, loopId) {
+  try {
+    await dbConnect();
+
+    // Find the user by their Clerk User ID
+    const user = await User.findOne({ "clerkUserId": userId });
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    // Find the loop by ID and associated with the user
+    const loop = await Loop.findOne({ _id: loopId, userId: user._id });
+
+    if (!loop) {
+      return { success: false, error: "Loop not found" };
+    }
+
+    return { success: true, data: JSON.parse(JSON.stringify(loop)), message: "Loop retrieved successfully." };
+  } catch (error) {
+    console.error("Error retrieving loop:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+
+export async function getEmailQueueByLoopId(loopId) {
+  try {
+    await dbConnect();
+
+    // Find the loop by ID and populate its emails
+    const loop = await Loop.findById(loopId).populate('emails');
+    if (!loop) {
+      return { success: false, error: "Loop not found" };
+    }
+
+    // Fetch emails from EmailQueue based on the loop's email references
+    const emailQueueData = await EmailQueue.find({
+      _id: { $in: loop.emails },
+    }).populate('documentGallary'); // Populate the `documentGallery` field
+
+    return {
+      success: true,
+      data: emailQueueData.length ? JSON.parse(JSON.stringify(emailQueueData)) : [],
+      message: emailQueueData.length
+        ? "Email queue retrieved successfully."
+        : "No emails found in the queue for this loop.",
+    };
+  } catch (error) {
+    console.error("Error retrieving email queue:", error);
+    return { success: false, error: error.message };
+  }
+}
