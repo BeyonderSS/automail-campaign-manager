@@ -7,8 +7,9 @@ import { FileUploader } from "./FileUploader";
 import { EmailEditor } from "./EmailEditor";
 import { createEmailQueueForLoop } from "@/app/actions/Loops";
 import { EmailPreview } from "./EmailPreview";
+import { ProcessLoopButton } from "../manage-loops/ProcessLoopButton";
 
-export default function StartLoop({documentGallaryData}) {
+export default function StartLoop({ documentGallaryData }) {
   const [step, setStep] = useState(1);
   const [isCsvUploaded, setIsCsvUploaded] = useState(false);
   const [emailTemplate, setEmailTemplate] = useState(null);
@@ -81,7 +82,7 @@ export default function StartLoop({documentGallaryData}) {
         ...item,
         subject: populateDynamicFields(template.subject, item.dynamicFields),
         body: populateDynamicFields(template.body, item.dynamicFields),
-        documentGallary:template.attachments._id
+        documentGallary: template.attachments._id,
       }));
 
       setEmailQueueData(updatedQueueData);
@@ -89,12 +90,12 @@ export default function StartLoop({documentGallaryData}) {
       // Optionally save to the backend
       const response = await createEmailQueueForLoop(
         loopData._id,
-        updatedQueueData,
+        updatedQueueData
       );
 
       if (!response.success) {
         throw new Error(
-          response.error || "An error occurred while creating email queues.",
+          response.error || "An error occurred while creating email queues."
         );
       }
 
@@ -105,10 +106,12 @@ export default function StartLoop({documentGallaryData}) {
       // Set error message in state
       setError(
         error.message ||
-          "An unexpected error occurred while processing the email template.",
+          "An unexpected error occurred while processing the email template."
       );
     }
   };
+
+  
 
   // Display error if it exists
   const renderError = () => {
@@ -120,6 +123,7 @@ export default function StartLoop({documentGallaryData}) {
       );
     }
   };
+
   const handleNavigatePreview = (index) => {
     setCurrentIndex(index);
   };
@@ -147,13 +151,16 @@ export default function StartLoop({documentGallaryData}) {
             />
           ))}
         {step === 3 && (
-          <EmailPreview
-            emailTemplate={emailQueueData[currentIndex]}
-            previewData={emailQueueData[currentIndex].dynamicFields}
-            totalRecords={emailQueueData.length}
-            currentIndex={currentIndex}
-            onNavigate={handleNavigatePreview}
-          />
+          <>
+            <EmailPreview
+              emailTemplate={emailQueueData[currentIndex]}
+              previewData={emailQueueData[currentIndex].dynamicFields}
+              totalRecords={emailQueueData.length}
+              currentIndex={currentIndex}
+              onNavigate={handleNavigatePreview}
+            />
+            <ProcessLoopButton loopId={loopData._id}/>
+          </>
         )}
       </div>
       {renderError()} {/* Render the error message */}

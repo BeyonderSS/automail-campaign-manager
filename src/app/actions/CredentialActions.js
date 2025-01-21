@@ -1,5 +1,6 @@
 "use server"
 import { clerkClient } from '@clerk/nextjs/server';
+import { cookies } from 'next/headers';
 
 /**
  * Function to add or update private metadata for a user on Clerk
@@ -55,6 +56,15 @@ export async function updateHuggingfaceToken(userId, huggingfaceToken) {
 }
 
 /**
+ * Function to add or update Upload Thing token in private metadata
+ * @param {string} userId - Clerk User ID
+ * @param {string} uploadThingToken - Upload Thing token value
+ */
+export async function updateUploadThingToken(userId, uploadThingToken) {
+  return updateUserMetadata(userId, { uploadThingToken });
+}
+
+/**
  * Function to update multiple fields at once
  * @param {string} userId - Clerk User ID
  * @param {object} credentials - The credentials object containing key-value pairs for metadata fields
@@ -67,6 +77,7 @@ export async function updateCredentials(userId, credentials) {
     if (credentials.smtpMail) metadata.smtpMail = credentials.smtpMail;
     if (credentials.smtpPassword) metadata.smtpPassword = credentials.smtpPassword;
     if (credentials.huggingfaceToken) metadata.huggingfaceToken = credentials.huggingfaceToken;
+    if (credentials.uploadThingToken) metadata.uploadThingToken = credentials.uploadThingToken;
 
     if (Object.keys(metadata).length === 0) {
       return { success: false, error: "No valid credentials provided." };
@@ -86,11 +97,14 @@ export async function updateCredentials(userId, credentials) {
  * @returns {object} - An object containing the metadata fields.
  */
 export async function getUserMetadata(userId) {
+  if (!userId) {
+    throw new Error("User ID is required")
+  }
   try {
-    const client = await clerkClient()
+    const client = await clerkClient();
 
     // Fetch user data from Clerk using the user ID
-    const user = await client.users.getUser(userId)
+    const user = await client.users.getUser(userId);
 
     // Access and return private metadata
     const privateMetadata = user.privateMetadata || {};
@@ -101,6 +115,7 @@ export async function getUserMetadata(userId) {
         smtpMail: privateMetadata.smtpMail || null,
         smtpPassword: privateMetadata.smtpPassword || null,
         huggingfaceToken: privateMetadata.huggingfaceToken || null,
+        uploadThingToken: privateMetadata.uploadThingToken || null,
       },
     };
   } catch (error) {
@@ -108,3 +123,5 @@ export async function getUserMetadata(userId) {
     return { success: false, error: error.message };
   }
 }
+
+

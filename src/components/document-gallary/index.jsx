@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileTextIcon, UploadCloud, MoreVertical } from "lucide-react";
+import { FileTextIcon, UploadCloud, Download, Trash2 } from "lucide-react";
 import { ReusableAlert } from "../ui/ReusableAlert";
 import { useAuth } from "@clerk/nextjs";
 import { createDocument, deleteDocument } from "@/app/actions/DocumentActions";
@@ -16,6 +16,7 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
+import { Separator } from "../ui/separator";
 
 // Component for rendering document card
 const DocumentCard = ({
@@ -46,7 +47,8 @@ const DocumentCard = ({
         onClick={() => window.open(doc.url, "_blank")}
         className="cursor-pointer"
       >
-        Download
+        <Download className="mr-2 h-4 w-4" />
+        <Separator orientation="vertical" className="mr-2 h-4" /> Download
       </ContextMenuItem>
       <ContextMenuSeparator />
       <ContextMenuItem
@@ -58,7 +60,8 @@ const DocumentCard = ({
         }}
         className="cursor-pointer text-red-500"
       >
-        Delete
+        <Trash2 className="mr-2 h-4 w-4" />
+        <Separator orientation="vertical" className="mr-2 h-4" /> Delete
       </ContextMenuItem>
     </ContextMenuContent>
     <ReusableAlert
@@ -171,17 +174,24 @@ export default function DocumentGalleryHome({ documentsData }) {
               />
             </div>
             <ScrollArea className="h-[calc(100vh-250px)]">
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {documentsData.map((doc) => (
-                  <DocumentCard
-                    key={doc._id}
-                    doc={doc}
-                    selectedDocument={selectedDocument}
-                    setSelectedDocument={setSelectedDocument}
-                    handleDelete={handleDelete}
-                  />
-                ))}
-              </div>
+              {documentsData.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {documentsData.map((doc) => (
+                    <DocumentCard
+                      key={doc._id}
+                      doc={doc}
+                      selectedDocument={selectedDocument}
+                      setSelectedDocument={setSelectedDocument}
+                      handleDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  No documents found, looks like you have not uploaded any
+                  documents,upload one now to use them as attachments.
+                </p>
+              )}
             </ScrollArea>
           </CardContent>
         </Card>

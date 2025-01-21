@@ -23,11 +23,7 @@ const menuItems = [
     url: "/dashboard",
     icon: Home,
   },
-  {
-    title: "New Loop",
-    url: "/dashboard/start-loop",
-    icon: Inbox,
-  },
+  
   {
     title: "Your Loops",
     url: "/dashboard/your-loops",
