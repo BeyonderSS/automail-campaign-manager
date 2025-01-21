@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
+import NextLink from "next/link";
 import Link from "@tiptap/extension-link";
+import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -326,7 +327,7 @@ export function EmailEditor({
               </SelectContent>
             </Select>
           ) : (
-            <Link href="dashboard/document-gallary">Upload Your Documents</Link>
+            <NextLink href="dashboard/document-gallary">Upload Your Documents</NextLink>
           )}
         </div>
 
