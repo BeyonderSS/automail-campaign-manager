@@ -22,7 +22,7 @@ export default async function RootLayout({ children }) {
   const defaultOpen = cookieStore.get("sidebar:state")?.value === "true"
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en" suppressHydrationWarning style={{ scrollBehavior: "smooth" }}>
         <body className={inter.className}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <NextSSRPlugin

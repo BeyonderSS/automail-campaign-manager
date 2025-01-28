@@ -1,6 +1,10 @@
+import LandingHome from '@/components/landing-page'
+import React from 'react'
 
-export default function Home() {
+function Home() {
   return (
-<></>  )
+   <LandingHome/>
+  )
 }
 
+export default Home
