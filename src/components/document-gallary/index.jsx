@@ -4,7 +4,13 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileTextIcon, UploadCloud, Download, Trash2 } from "lucide-react";
+import {
+  FileTextIcon,
+  UploadCloud,
+  Download,
+  Trash2,
+  DownloadCloud,
+} from "lucide-react";
 import { ReusableAlert } from "../ui/ReusableAlert";
 import { useAuth } from "@clerk/nextjs";
 import { createDocument, deleteDocument } from "@/app/actions/DocumentActions";
@@ -17,6 +23,7 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import { Separator } from "../ui/separator";
+import { Button } from "../ui/button";
 
 // Component for rendering document card
 const DocumentCard = ({
@@ -128,27 +135,53 @@ const DocumentPreview = ({ selectedDocument }) => (
 );
 
 // Component for rendering document details
-const DocumentDetails = ({ selectedDocument }) => (
-  <div>
-    <h3 className="mb-2 font-semibold">Document Details</h3>
-    <p>
-      <strong>Title:</strong> {selectedDocument.title}
-    </p>
-    <p>
-      <strong>URL:</strong> {selectedDocument.url}
-    </p>
-  </div>
-);
-
+function DocumentDetails({ selectedDocument }) {
+  if (!selectedDocument) {
+    return (
+      <div className="flex h-full items-center justify-center text-muted-foreground">
+        Select a document to preview
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-3">
+      <h3 className="mb-2 font-semibold">Document Details</h3>
+      <p>
+        <strong>Title:</strong> {selectedDocument.title}
+      </p>
+      <Button onClick={() => window.open(selectedDocument.url, "_blank")}>
+        <DownloadCloud /> Download
+      </Button>
+    </div>
+  );
+}
 export default function DocumentGalleryHome({ documentsData }) {
   const { userId } = useAuth();
   const [selectedDocument, setSelectedDocument] = useState(null);
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="mb-6 text-3xl font-bold">Document Gallery</h1>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <DocumentsList
+          documentsData={documentsData}
+          userId={userId}
+          setSelectedDocument={setSelectedDocument}
+          selectedDocument={selectedDocument}
+        />
+        {selectedDocument && <DocumentSidebar selectedDocument={selectedDocument} />}
+      </div>
+    </div>
+  );
+}
+
+function DocumentsList({ documentsData, userId, selectedDocument, setSelectedDocument }) {
   const [isUploading, setIsUploading] = useState(false);
 
   const handleUpload = async (title, url, fileKey) => {
     try {
-      const response = await createDocument({ title, url, fileKey, userId });
-      // Optionally handle response or refresh document data here
+      await createDocument({ title, url, fileKey, userId });
+      // Optionally refresh document data
     } catch (error) {
       console.error("Upload failed:", error);
     }
@@ -160,58 +193,54 @@ export default function DocumentGalleryHome({ documentsData }) {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="mb-6 text-3xl font-bold">Document Gallery</h1>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Documents</h2>
-              <UploadDocument
-                isUploading={isUploading}
-                setIsUploading={setIsUploading}
-                handleUpload={handleUpload}
-              />
+    <Card className={`${selectedDocument ? "lg:col-span-2" : "lg:col-span-3" } transition-all ease-in-out duration-300`}>
+      <CardContent className="p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">Documents</h2>
+          <UploadDocument isUploading={isUploading} setIsUploading={setIsUploading} handleUpload={handleUpload} />
+        </div>
+        <ScrollArea className="h-[calc(100vh-250px)]">
+          {documentsData.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {documentsData.map((doc) => (
+                <DocumentCard
+                  key={doc._id}
+                  doc={doc}
+                  selectedDocument={selectedDocument}
+                  setSelectedDocument={setSelectedDocument}
+                  handleDelete={handleDelete}
+                />
+              ))}
             </div>
-            <ScrollArea className="h-[calc(100vh-250px)]">
-              {documentsData.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {documentsData.map((doc) => (
-                    <DocumentCard
-                      key={doc._id}
-                      doc={doc}
-                      selectedDocument={selectedDocument}
-                      setSelectedDocument={setSelectedDocument}
-                      handleDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">
-                  No documents found, looks like you have not uploaded any
-                  documents,upload one now to use them as attachments.
-                </p>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <Tabs defaultValue="preview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="preview">Preview</TabsTrigger>
-                <TabsTrigger value="details">Details</TabsTrigger>
-              </TabsList>
-              <TabsContent value="preview" className="mt-4">
-                <DocumentPreview selectedDocument={selectedDocument} />
-              </TabsContent>
-              <TabsContent value="details" className="mt-4">
-                <DocumentDetails selectedDocument={selectedDocument} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          ) : (
+            <p className="text-muted-foreground">
+              No documents found, upload one now to use them as attachments.
+            </p>
+          )}
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 }
+
+function DocumentSidebar({ selectedDocument }) {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <Tabs defaultValue="preview" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsTrigger value="details">Details</TabsTrigger>
+          </TabsList>
+          <TabsContent value="preview" className="mt-4">
+            <DocumentPreview selectedDocument={selectedDocument} />
+          </TabsContent>
+          <TabsContent value="details" className="mt-4">
+            <DocumentDetails selectedDocument={selectedDocument} />
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
+

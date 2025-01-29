@@ -1,22 +1,22 @@
 import mongoose from "mongoose";
 
 const loopSchema = new mongoose.Schema({
-  title: { type: String, required: true }, // Title of the loop
-  description: { type: String }, // Description of the loop
-  emails: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EmailQueue' }], // Reference to the email queue
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the user
+  title: { type: String, required: true, index: true }, // Index for faster searches
+  description: { type: String },
+  emails: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EmailQueue' }],
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true }, // Index for user-based queries
   status: {
     type: String,
-    enum: ['incomplete','pending', 'in-progress', 'completed', 'failed'],
+    enum: ['incomplete', 'pending', 'in-progress', 'completed', 'failed'],
     default: 'pending',
-  }, // Loop status
-  totalEmails: { type: Number, required: false }, // Total number of emails in the loop
-  sentEmails: { type: Number, default: 0 }, // Number of emails successfully sent
-  failedEmails: { type: Number, default: 0 }, // Number of emails failed
-  createdAt: { type: Date, default: Date.now }, // When the loop was created
-  completedAt: { type: Date }, // When the loop was completed
+    index: true, // Queries for different statuses will be faster
+  },
+  totalEmails: { type: Number },
+  sentEmails: { type: Number, default: 0 },
+  failedEmails: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now, index: true }, // Indexed for sorting
+  completedAt: { type: Date },
 });
 
 const Loop = mongoose.models.Loop || mongoose.model('Loop', loopSchema);
-
 export default Loop;
