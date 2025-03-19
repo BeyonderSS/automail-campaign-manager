@@ -1,37 +1,11 @@
-import { getAllLoopsByUserId } from "@/app/actions/Loops";
+import { LoopCardSkeleton } from "@/components/manage-loops/Loaders/LoopCardSkeleton";
 import { LoopList } from "@/components/manage-loops/LoopList";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
+import { Suspense } from "react";
 
 export default async function LoopsPage() {
-  let loops = [];
-  let error = null;
-
-  try {
-    const { userId } = await auth();
-
-    // Fetch all loops by the user's ID
-    const { success, data, error: fetchError } = await getAllLoopsByUserId(userId);
-
-    if (!success) {
-      throw new Error(fetchError || "Failed to retrieve loops");
-    }
-
-    loops = data;
-  } catch (err) {
-    error = err.message;
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto py-8">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -43,7 +17,17 @@ export default async function LoopsPage() {
           </Button>
         </Link>
       </div>
-      {loops.length > 0 ? <LoopList loops={loops} /> : <p>No loops found.</p>}
+      <Suspense
+        fallback={
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <LoopCardSkeleton key={index} />
+            ))}
+          </div>
+        }
+      >
+        <LoopList />
+      </Suspense>
     </div>
   );
 }
