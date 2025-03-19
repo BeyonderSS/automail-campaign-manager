@@ -11,8 +11,26 @@ import { Mail, Calendar, AlertCircle } from "lucide-react";
 import { ProcessLoopButton } from "./ProcessLoopButton";
 import Link from "next/link";
 import { Button } from "../ui/button";
+import { auth } from "@clerk/nextjs/server";
+import { getLoopById } from "@/app/actions/Loops";
 
-export function LoopDetails({ loop }) {
+export async function LoopDetails({ slug }) {
+  const { userId } = await auth();
+  const { success: loopSuccess, data: loop, error: loopError } = await getLoopById(userId, slug);
+
+  if (!loopSuccess) {
+    return (
+      <Card className="mx-auto w-full max-w-3xl">
+        <CardHeader>
+          <CardTitle>Error</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-500">Failed to load loop details: {loopError}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const progress = (loop.sentEmails / loop.totalEmails) * 100;
 
   return (
