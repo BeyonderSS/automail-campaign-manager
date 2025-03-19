@@ -36,7 +36,7 @@ export default async function RootLayout({ children }) {
             />
             {children}
             <Toaster />
-            {/* <Logger /> */}
+            <Logger />
           </ThemeProvider>
         </body>
       </html>

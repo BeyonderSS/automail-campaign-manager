@@ -1,18 +1,29 @@
 import { getDocumentsByUser } from "@/app/actions/DocumentActions";
 import DocumentGallaryHome from "@/components/document-gallary";
-import React from "react";
+import React, { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { getUserMetadata } from "@/app/actions/CredentialActions";
 import { Lock } from "lucide-react";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
-async function page() {
+async function fetchData() {
   const { userId } = await auth();
-  const tokenData = await getUserMetadata(userId);
-  const isPageLocked = tokenData.data.uploadThingToken ? false : true;
-  const documentsData = await getDocumentsByUser(userId);
 
-  // If the page is locked, show a message or redirect
+  const [tokenData, documentsData] = await Promise.all([
+    getUserMetadata(userId),
+    getDocumentsByUser(userId),
+  ]);
+
+  return {
+    isPageLocked: !tokenData.data.uploadThingToken,
+    documentsData: documentsData?.data,
+  };
+}
+
+async function DocumentGallaryWrapper() {
+  const { isPageLocked, documentsData } = await fetchData();
+
   if (isPageLocked) {
     return (
       <div className="flex items-center justify-center p-10 text-center">
@@ -37,8 +48,13 @@ async function page() {
     );
   }
 
-  // Render the document gallery if the page is not locked
-  return <DocumentGallaryHome documentsData={documentsData?.data} />;
+  return <DocumentGallaryHome documentsData={documentsData} />;
 }
 
-export default page;
+export default function Page() {
+  return (
+    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+      <DocumentGallaryWrapper />
+    </Suspense>
+  );
+}
