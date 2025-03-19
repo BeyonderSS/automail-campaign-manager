@@ -18,7 +18,7 @@ async function LoopDetailsPage({ params }) {
 
   const { slug } = await params;
   return (
-    <div className="container mx-auto py-8">
+    <div className=" mx-4 py-8">
       <div className="mb-8">
         <Link href="/dashboard/your-loops">
           <Button variant="outline">
